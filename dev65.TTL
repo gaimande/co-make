@@ -1,0 +1,98 @@
+; *****************************************************
+; *   Auto halt the making process when any error occur
+; *   Version 1.0
+; *   Author: quyenlv@dasannetworks.com
+; *   Date: September 20th 2014
+; *****************************************************
+include 'F:\boxConfig.ttl'
+
+; Hide MACRO dialog box
+;show -1
+
+; Change your prompt sign here
+prompt = 'pi@raspbmc'
+nos = 'G_ONU_N_2.75.quyenlv.inactive.keepalive-1083.01.H640RW.x'
+make_err = 'No targets specified and no makefile found'
+
+filesearch auth_file
+if result=1 then
+   fileopen fhandle auth_file 0
+   filereadln fhandle _constr
+   fileclose fhandle
+   
+   goto connect
+endif
+
+:connect
+; Openning SSH conection
+connect _constr
+if result != 2 then
+   yesnobox 'Connection fail. Try again?' 'Caution'
+	if result then
+	   goto login
+	else
+		goto end
+	endif
+endif
+
+; Entering synchronous communication mode (useful in most cases)
+setsync 1
+;
+
+; Assigning new title to TeraTerm window
+settitle 'Dev65'
+setmulticastname 'Dev65'
+;
+;exec 'cmd /c echo "a" > COM3'
+
+; Send SOS message to restart the TTY_BOX
+sendmulticast 'TTY_BOX' sos 13 10
+
+:start
+; Wait for user enter 'make' command
+waitln 'make'#13#10
+sendmulticast 'TTY_BOX' ack_msg 13 10
+
+; Wail till any errors occur
+wait 'Error 1' prompt #3
+
+;If any errors occur
+if result=1 goto halt
+
+;Go out if making successfully.
+if result=2 goto _check
+
+if result=3 goto _exit
+
+:halt
+; Send CTRL+C to halt the making process
+sendln #3
+
+; Display a alert message to user
+exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 4e&echo.&echo. Build Failed.&echo. Please check the output log!&echo.&echo. Press any keys to exit!&pause>NUL"'
+goto _exit
+
+:_check
+sendln 'echo $?'
+flushrecv
+waitn 10
+strmatch inputstr '0'
+if result=0 goto _exit 
+
+; Success
+; Copy NOS to tftpboot directory
+;sendln 'source ~/copy_nos_ftp.sh ' nos
+;waitln prompt
+; Display a alert message to user
+exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 2e&echo.&echo. Build Successfully.&echo.&echo. Press any keys to exit!&pause>NUL"'
+
+:_exit
+mpause 200
+sendmulticast 'TTY_BOX' done_msg 13 10
+; Restart for the new make process
+goto start
+
+:end
+disconnect
+closett
+;end

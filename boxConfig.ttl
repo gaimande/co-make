@@ -1,0 +1,13 @@
+; *****************************************************
+; *   Auto halt the making process when any error occur
+; *   Version 1.0
+; *   Author: quyenlv@dasannetworks.com
+; *   Date: September 20th 2014
+; *****************************************************
+
+ack_msg = 'ACK200'
+done_msg = 'DONE200'
+rst_msg = 'RST200'
+auth_file = 'F:\auth.txt'
+com_file = 'F:\com.txt'
+sos = "SOS113"

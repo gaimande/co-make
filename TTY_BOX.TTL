@@ -1,0 +1,95 @@
+; *****************************************************
+; *   Auto halt the making process when any error occur
+; *   Version 1.0
+; *   Author: quyenlv@dasannetworks.com
+; *   Date: September 20th 2014
+; *****************************************************
+include 'E:\sBox\boxConfig.ttl'
+
+; Hide MACRO dialog box
+;show -1
+
+; Openning Serial connection using COM port.
+; Valid value for port number is 1..6.
+filesearch com_file
+if result=1 then
+   fileopen fhandle com_file 0
+   filereadln fhandle _constr
+   fileclose fhandle
+   
+   goto connect
+endif
+
+:login
+; Calling Popup window to get host address
+inputbox 'Enter COM port number' 'Connect to serial port'
+_comport=inputstr
+
+; Building connection string
+sprintf2 _constr '/C=%s /BAUD=9600' _comport
+
+:connect
+; Openning serial conection
+connect _constr
+if result != 2 then
+   yesnobox 'Connection fail. Try again?' 'Caution'
+	if result then
+	   goto login
+	else
+		goto end
+	endif
+endif
+
+; Asking for save information
+ifdefined _comport
+if result then
+	yesnobox 'Do you want to save?' 'Connection successful'
+	if result then
+	   fileopen fhandle com_file 0
+	   filewrite fhandle _constr
+	   fileclose fhandle
+	endif
+endif
+
+; Entering synchronous communication mode (useful in most cases)
+;setsync 1
+;
+; Assigning new title to TeraTerm window
+settitle 'TTY_BOX'
+setmulticastname 'TTY_BOX'
+
+; Open log file
+;gettime timestr "%Y%m%d-%H%M%S"
+;getdir mdir
+;sprintf2 filename '%s\pushbox_%s.log' mdir timestr
+
+;logopen filename 0 0
+;logwrite 'Log start'#13#10
+;logwrite '*****************************************************'#13#10
+;logstart
+
+; Start here
+:start
+waitln 'make' 
+sendmulticast 'Dev65' 'make' 13 10
+
+waitln ack_msg sos
+
+; If receive sos message, restart the macro
+if result=2 goto start
+
+waitln done_msg sos
+
+; If receive sos message, restart the macro
+if result=2 goto start
+
+;sendln #13#10
+;gettime timestr "[%Y/%m/%d %H:%M:%S]"
+;sprintf2 content '%s   %s' timestr 'Recieved DONE message.'
+;sendln content#13#10
+
+goto start
+
+:end
+disconnect
+closett
