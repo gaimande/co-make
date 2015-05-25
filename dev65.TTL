@@ -41,12 +41,13 @@ setmulticastname 'Dev65'
 ;
 ;exec 'cmd /c echo "a" > COM3'
 
+:start
 ; Send SOS message to restart the TTY_BOX
 sendmulticast 'TTY_BOX' sos 13 10
 
-:start
 ; Wait for user enter 'make' command
 waitln 'make'#13#10
+mpause 500
 sendmulticast 'TTY_BOX' ack_msg 13 10
 
 ; Wail till any errors occur
@@ -64,6 +65,7 @@ if result=3 goto _exit
 ; Send CTRL+C to halt the making process
 sendln #3
 
+:build_fail
 ; Display a alert message to user
 exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 4e&echo.&echo. Build Failed.&echo. Please check the output log!&echo.&echo. Press any keys to exit!&pause>NUL"'
 goto _exit
@@ -73,9 +75,9 @@ sendln 'echo $?'
 flushrecv
 waitn 10
 strmatch inputstr '0'
-if result=0 goto _exit 
+if result=0 goto build_fail 
 
-; Success
+:build_success
 ; Copy NOS to tftpboot directory
 ;sendln 'source ~/copy_nos_ftp.sh ' nos
 ;waitln prompt

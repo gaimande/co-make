@@ -70,8 +70,8 @@ setmulticastname 'TTY_BOX'
 
 ; Start here
 :start
-waitln 'make' 
-sendmulticast 'Dev65' 'make' 13 10
+wait 'make' 
+sendmulticast 'Dev65' make_msg 13 10
 
 waitln ack_msg sos
 

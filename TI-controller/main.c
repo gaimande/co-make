@@ -5,6 +5,7 @@
 
 #include <msp430g2553.h>
 #include "uart_simple.h"
+#include <string.h>
 
 void FaultRoutine(void);
 void ConfigWDT(void);
@@ -18,7 +19,7 @@ void main(void)
     ConfigIOs();
     ConfigUART();               
         
-    _BIS_SR(LPM4_bits + GIE);                      // Go in standby mode to minimum consumption
+    //_BIS_SR(LPM4_bits + GIE);                      // Go in standby mode to minimum consumption
     while (1);
 }
 
@@ -36,7 +37,7 @@ void FaultRoutine(void)
 void ConfigClocks(void)
 {
     if (CALBC1_1MHZ ==0xFF ||
-	    CALDCO_1MHZ == 0xFF)
+        CALDCO_1MHZ == 0xFF)
     {
         FaultRoutine();
     }
@@ -50,7 +51,7 @@ void ConfigClocks(void)
 
 void ConfigIOs(void)
 {
-    P1DIR = ~(BIT3);                               // Set P1.3 as inputs, other outputs
+    P1DIR = 0xFF & ~(BIT3);                               // Set P1.3 as inputs, other outputs
     P1OUT &= ~BIT0;
     P1REN |= BIT3;                                 // Pull-up resistor enable
     P1IE |= BIT3;                                  // Enable port interrupt
@@ -62,15 +63,31 @@ void ConfigIOs(void)
 
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
-{    
+{
+	static int i = 0;
+    static char buf[32];
+	
+    P1OUT ^= BIT0;                                 // Toggle LED
     
+    if (13 != UCA0RXBUF)
+    {
+        buf[i] = UCA0RXBUF;
+        i++;
+        return;
+    }
+    
+    buf[i] = 10;    
+    i = 0;
+    
+    Print_UART(buf);    
+    memset(buf, 0, sizeof(buf));
 }
 
 #pragma vector=PORT1_VECTOR
 __interrupt void PORT1_ISR(void)
 {    
     P1OUT ^= BIT0;                                 // Toggle LED
-    Print_UART ("make");
+    Print_UART ("make\n");
         
     __delay_cycles(40000);
     P1IFG &= ~BIT3;                                // Clear interrupt Flag for next interrupt

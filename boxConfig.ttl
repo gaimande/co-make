@@ -13,9 +13,12 @@ make_err = 'No targets specified and no makefile found'
 ack_msg = 'ACK200'
 done_msg = 'DONE200'
 rst_msg = 'RST200'
+sos = "SOS113"
+make_msg = 'make'
+
 auth_file = 'E:\auth.txt'
 com_file = 'E:\com.txt'
-sos = "SOS113"
+
 macro_dev_server = 'E:\sBox\sBox\dev65.TTL'
 macro_tty_box = 'E:\sBox\sBox\TTY_BOX.TTL'
 window_config = 'E:\sBox\sBox\WINDOW.ini'

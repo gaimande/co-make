@@ -125,13 +125,14 @@ fileopen fhandle com_file 0
 filewrite fhandle _constr_tty
 fileclose fhandle
 
-; Start dev65.ttl script
 getttdir dir_tearterm
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_dev_server
-exec cmd_str
 
 ; Start ttyBox.ttl script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s /V' dir_tearterm macro_tty_box
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_tty_box
+exec cmd_str
+
+; Start dev65.ttl script
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_dev_server
 exec cmd_str
 
 :_end
