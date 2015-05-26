@@ -63,11 +63,13 @@ endif
 ; The timeout limit is 10 sec.
 timeout = 10
 
-; Building prompt string from user name
-;sprintf2 prompt '%s@' _user
-wait prompt
-if result=0 then
-   yesnobox 'Connection fail. Try again?' 'TTY Caution'
+; Be sure that SSH connection is OK before stating test COM connection
+; If after 10 second we do not receive any disconnect or unlink event, 
+; it means that the connection is OK.
+waitevent 1 or 2 or 4
+
+if result!=1 then
+    yesnobox 'Connection fail. Try again?' 'TTY Caution'
     if result then
        goto login_ssh
     else

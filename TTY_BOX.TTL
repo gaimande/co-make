@@ -73,12 +73,12 @@ setmulticastname 'TTY_BOX'
 wait 'make' 
 sendmulticast 'Dev65' make_msg 13 10
 
-waitln ack_msg sos
+waitln ack_msg sos_msg
 
 ; If receive sos message, restart the macro
 if result=2 goto start
 
-waitln done_msg sos
+waitln done_msg sos_msg
 
 ; If receive sos message, restart the macro
 if result=2 goto start

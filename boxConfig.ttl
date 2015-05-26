@@ -5,15 +5,12 @@
 ; *   Date: September 20th 2014
 ; *****************************************************
 
-; Change your prompt sign here
-prompt = 'pi@raspbmc'
-nos = 'G_ONU_N_2.75.quyenlv.inactive.keepalive-1083.01.H640RW.x'
-make_err = 'No targets specified and no makefile found'
+sBoxPrompt = 'you@sBox'
 
 ack_msg = 'ACK200'
 done_msg = 'DONE200'
 rst_msg = 'RST200'
-sos = "SOS113"
+sos_msg = "SOS113"
 make_msg = 'make'
 
 auth_file = 'E:\auth.txt'
