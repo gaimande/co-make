@@ -1,0 +1,72 @@
+; *****************************************************
+; *   Auto halt the making process when any error occur
+; *   Version 1.0
+; *   Author: quyenlv@dasannetworks.com
+; *   Date: September 20th 2014
+; *****************************************************
+include 'boxConfig.ttl'
+
+; Hide MACRO dialog box
+;show -1
+
+:login_ssh
+; Calling Pop-up window to get host address
+inputbox 'Enter Host IP address' 'Login'
+_hostaddr=inputstr
+; Check NULL
+strcompare _hostaddr ""
+if result=0 goto login_ssh 
+
+; Calling Pop-up window to get user name
+:get_user
+inputbox 'Enter username' 'Login'
+_user=inputstr
+; Check NULL
+strcompare _user ""
+if result=0 goto get_user
+
+; Calling Popup window to get password
+:get_password
+passwordbox 'Enter password' 'Login'
+_passwd=inputstr
+; Check NULLs
+strcompare _passwd ""
+if result=0 goto get_password
+
+; Building connection string
+sprintf2 _constr_ssh '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10' _hostaddr _user _passwd
+
+; Opening SSH connection
+statusbox  '\n   Trying to connect through SSH. Please wait...   \n ' 'Notice' 1
+connect _constr_ssh
+closesbox
+if result != 2 then
+    filedelete auth_file
+	end
+endif
+
+; The timeout limit is 10 sec.
+timeout = 10
+
+; Be sure that SSH connection is OK before stating test COM connection
+; If after 10 second we do not receive any disconnect or unlink event, 
+; it means that the connection is OK.
+waitevent 1 or 2 or 4
+
+if result!=1 then
+    closett
+	
+    filedelete auth_file
+	end	
+endif
+
+timeout = 0
+
+; Save SSH authentication information
+fileopen fhandle auth_file 0
+filewrite fhandle _constr_ssh
+fileclose fhandle
+          
+closett
+
+end

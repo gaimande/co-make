@@ -4,7 +4,7 @@
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
 ; *****************************************************
-include 'E:\sBox\sBox\boxConfig.ttl'
+include 'boxConfig.ttl'
 
 ; Hide MACRO dialog box
 ;show -1

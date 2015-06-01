@@ -16,6 +16,13 @@ if result=1 then
    filereadln fhandle _constr_ssh
    fileclose fhandle
    
+   ; Wait timeout to change the saved configuration
+   cnt = 3
+   cnt_title = 'Saved configuration found!'
+   cnt_msg = 'Press any key to change... in '
+   connect '127.0.0.1'
+   call CountDown
+   
    goto connect_ssh
 endif
 
@@ -140,3 +147,37 @@ exec cmd_str
 :_end
 closett
 end
+
+; *****************************************************
+; *
+; *   Function      : CountDown
+; *   Description   : Display countdown message
+; *   Input         : cnt - time to count in second
+; *                   cnt_title - title of countdown box
+; *                   cnt_msg - message display
+; *   Output        : result (0-No key pressed ; 1-Key pressed)
+; *
+; *****************************************************
+:CountDown
+    while cnt>=0
+        sprintf2 cnt_str '\n%s %d seconds\n ' cnt_msg cnt
+        statusbox cnt_str cnt_title 1
+		
+        cnt = cnt - 1
+		
+        ; The timeout limit is 1 sec.
+        timeout = 1
+    
+        ; Clear the received buffer.
+        flushrecv
+        waitn 1
+    
+        if result = 1 then
+            goto __exit_CountDown
+        endif    
+    endwhile
+
+:__exit_CountDown
+    timeout = 0
+    closesbox
+return
