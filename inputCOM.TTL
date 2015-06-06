@@ -7,7 +7,10 @@
 include 'boxConfig.ttl'
 
 ; Hide MACRO dialogue box
-show -1
+;show -1
+
+; Return value with 0-Configure Fail and 1-Configure OK
+ret = 0
 
 :login_tty
 ; Calling Popup window to get host address
@@ -28,14 +31,18 @@ sprintf2 _constr_tty '/C=%s /BAUD=9600' _comport
 connect _constr_tty
 if result != 2 then
     closett
-    filedelete _constr_tty
-	end
+    yesnobox 'Connection fail. Try again?' 'Caution'
+    if result then
+        goto login_tty
+    else
+        end
+    endif
 endif
 
 fileopen fhandle com_file 0
 filewrite fhandle _constr_tty
 fileclose fhandle
 
-closett
+ret = 1
 
-end
+closett

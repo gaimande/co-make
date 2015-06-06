@@ -9,130 +9,24 @@ include 'E:\sBox\sBox\boxConfig.ttl'
 ; Hide MACRO dialog box
 ;show -1
 
-:check_saved_auth
-filesearch auth_file
-if result=1 then
-   fileopen fhandle auth_file 0
-   filereadln fhandle _constr_ssh
-   fileclose fhandle
-   
-   ; Wait timeout to change the saved configuration
-   cnt = 3
-   cnt_title = 'Saved configuration found!'
-   cnt_msg = 'Press any key to change... in '
-   connect '127.0.0.1'
-   call CountDown
-   
-   goto connect_ssh
-endif
-
-:login_ssh
-; Calling Pop-up window to get host address
-inputbox 'Enter Host IP address' 'Login'
-_hostaddr=inputstr
-; Check NULL
-strcompare _hostaddr ""
-if result=0 goto login_ssh 
-
-; Calling Pop-up window to get user name
-:get_user
-inputbox 'Enter username' 'Login'
-_user=inputstr
-; Check NULL
-strcompare _user ""
-if result=0 goto get_user
-
-; Calling Popup window to get password
-:get_password
-passwordbox 'Enter password' 'Login'
-_passwd=inputstr
-; Check NULLs
-strcompare _passwd ""
-if result=0 goto get_password
-
-; Building connection string
-sprintf2 _constr_ssh '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10' _hostaddr _user _passwd
-
-:connect_ssh
-; Opening SSH connection
-statusbox  '\n   Trying to connect through SSH. Please wait...   \n ' 'Notice' 1
-connect _constr_ssh
-closesbox
-if result != 2 then
-   yesnobox 'Connection fail. Try again?' 'Dev Caution'
+call CheckSavedConf
+if ret = 1 then
+    yesnobox 'Saved configuration found!. Do you want to use it?' 'Information'
     if result then
-       goto login_ssh
+        goto let_start
     else
-        end
+        filedelete auth_file
+        filedelete com_file
     endif
 endif
 
-; The timeout limit is 10 sec.
-timeout = 10
+include 'inputSSH.TTL'
+if ret=0 goto _end
 
-; Be sure that SSH connection is OK before stating test COM connection
-; If after 10 second we do not receive any disconnect or unlink event, 
-; it means that the connection is OK.
-waitevent 1 or 2 or 4
+include 'inputCOM.TTL'
+if ret=0 goto _end
 
-if result!=1 then
-    yesnobox 'Connection fail. Try again?' 'TTY Caution'
-    if result then
-       goto login_ssh
-    else
-        end
-    endif
-endif
-
-timeout = 0
-
-; Save SSH authentication information
-fileopen fhandle auth_file 0
-filewrite fhandle _constr_ssh
-fileclose fhandle
-          
-closett
-
-:check_saved_com
-filesearch com_file
-if result=1 then
-   fileopen fhandle com_file 0
-   filereadln fhandle _constr_tty
-   fileclose fhandle
-   
-   goto connect_tty  
-endif
-
-:login_tty
-; Calling Popup window to get host address
-inputbox 'Enter COM port number' 'Connect to serial port'
-_comport=inputstr
-; Check NULL
-strcompare _comport ""
-if result=0 goto login_tty
-
-; Check numeric
-str2int val _comport
-if result=0 goto login_tty
-
-; Building connection string
-sprintf2 _constr_tty '/C=%s /BAUD=9600' _comport
-
-:connect_tty
-; Openning serial conection
-connect _constr_tty
-if result != 2 then
-   yesnobox 'Connection fail. Try again?' 'Caution'
-    if result then
-       goto login_tty
-    else
-        goto _end
-    endif
-endif
-
-fileopen fhandle com_file 0
-filewrite fhandle _constr_tty
-fileclose fhandle
+:let_start
 
 getttdir dir_tearterm
 
@@ -145,7 +39,6 @@ sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_dev_se
 exec cmd_str
 
 :_end
-closett
 end
 
 ; *****************************************************
@@ -165,19 +58,28 @@ end
 		
         cnt = cnt - 1
 		
-        ; The timeout limit is 1 sec.
-        timeout = 1
-    
-        ; Clear the received buffer.
-        flushrecv
-        waitn 1
-    
-        if result = 1 then
-            goto __exit_CountDown
-        endif    
+        pause 1 
     endwhile
+return
 
-:__exit_CountDown
-    timeout = 0
-    closesbox
+
+
+; *****************************************************
+; *
+; *   Function      : CheckSavedConf
+; *   Description   : Check the existence of saved configuration
+; *   Input         : None
+; *   Output        : ret (0-Not Found ; 1-Found)
+; *
+; *****************************************************
+:CheckSavedConf
+ret = 0
+filesearch auth_file
+if result=1 then
+    filesearch com_file
+    if result=1 then
+	    ret = 1
+    endif
+endif
+
 return

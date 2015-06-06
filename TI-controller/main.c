@@ -3,29 +3,77 @@
  *        (c) May 2015 gaimande@gmail.com
  ***********************************************************************/
 
+#include <string.h>
 #include <msp430g2553.h>
 #include "uart_simple.h"
-#include <string.h>
+
+#define CHAR_NEWLINE          10
+#define CHAR_CARR_RETURN      13
+#define STR_RUNNING           "ACK200"
+#define STR_ERROR             "ERROR"
+#define STR_SUCCESS           "SUCCESS"
+#define STR_MAKE              "make"
+#define IS_MATCH              0
+
+#define TURN_ON_ERR_LED()     P1OUT |= BIT0
+#define TURN_OFF_ERR_LED()    P1OUT &= ~ BIT0
+
+#define TURN_ON_OK_LED()      P1OUT |= BIT6
+#define TURN_OFF_OK_LED()     P1OUT &= ~ BIT6
+#define TOGGLE_OK_LED()       P1OUT ^= BIT6;
+
+#ifndef TRUE
+#define TRUE                  1
+#define FALSE                 0
+#endif
 
 void FaultRoutine(void);
-void ConfigWDT(void);
+void ClearWDT(void);
+void StopWDT(void);
 void ConfigClocks(void);
 void ConfigIOs(void);
+void ConfigTimerA2(void);
+
+int is_running = FALSE;
 
 void main(void)
 {
-    ConfigWDT();
+    ClearWDT();    
     ConfigClocks();
     ConfigIOs();
+    ConfigTimerA2();
     ConfigUART();               
         
-    //_BIS_SR(LPM4_bits + GIE);                      // Go in standby mode to minimum consumption
-    while (1);
+    __delay_cycles(100);
+    Print_UART ("Welcome to sBox!\n");
+    TURN_ON_OK_LED();
+
+    while (1)
+    {
+        if (FALSE == is_running)
+        {
+            StopWDT();  
+            _BIS_SR(LPM4_bits + GIE);              // If in standby mode, choose LPM4
+                                                   // to minimum consumption
+        }
+        else /* Running */
+        {
+            _BIS_SR(LPM3_bits + GIE);		       // In process mode, choose LPM3 to
+                                                   // enable ACLK clock for timer
+        }
+    }
 }
 
-void ConfigWDT(void)
+void ClearWDT(void)
 {
-    WDTCTL = WDTPW + WDTHOLD;                      // Disable Watchdog
+    WDTCTL = WDTPW + WDTCNTCL + WDTSSEL;           // Clear watchdog timer
+                                                   // Clock Source from VLO in this project
+                                                   // so WDT will reset MCU after 2^16 * 1/12000 ~ 5s
+}
+
+void StopWDT(void)
+{
+    WDTCTL = WDTPW + WDTHOLD;                      // Stop watchdog timer
 }
 
 void FaultRoutine(void)
@@ -51,8 +99,9 @@ void ConfigClocks(void)
 
 void ConfigIOs(void)
 {
-    P1DIR = 0xFF & ~(BIT3);                               // Set P1.3 as inputs, other outputs
-    P1OUT &= ~BIT0;
+    P1DIR = 0xFF & ~(BIT3);                        // Set P1.3 as inputs, other outputs
+    P1OUT &= ~(BIT0 + BIT6);
+    
     P1REN |= BIT3;                                 // Pull-up resistor enable
     P1IE |= BIT3;                                  // Enable port interrupt
     P1IES &= ~BIT3;                                // Low to High transition
@@ -61,23 +110,61 @@ void ConfigIOs(void)
     __enable_interrupt();                          // enable all interrupts
 }
 
+void ConfigTimerA2(void)
+{
+    CCTL0 &= ~CCIE;                                // Disable capture/compare mode
+    CCR0 = 6000;                                   // Select the ACLK (VLO) and sets the operation for up mode
+    TACTL = TASSEL_1 + MC_1;                       // Change timer to 500ms period with CCR0 = 12000 x (time in second)
+}
+
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer_A (void)
+{
+    CCR0 = 6000;
+    TOGGLE_OK_LED();
+    
+    ClearWDT();   
+}
+
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-	static int i = 0;
+    static int i = 0;
     static char buf[32];
-	
-    P1OUT ^= BIT0;                                 // Toggle LED
     
-    if (13 != UCA0RXBUF)
+    if (CHAR_CARR_RETURN != UCA0RXBUF)
     {
         buf[i] = UCA0RXBUF;
         i++;
         return;
     }
     
-    buf[i] = 10;    
+    buf[i] = CHAR_NEWLINE;
     i = 0;
+    
+    if (IS_MATCH == strncmp (buf, STR_RUNNING, strlen(STR_RUNNING)))
+    {
+        is_running = TRUE;
+        CCTL0 |= CCIE;                             // Enable capture/compare mode
+        CCR0 = 6000;
+        TURN_OFF_ERR_LED();
+    }
+    else if (IS_MATCH == strncmp (buf, STR_ERROR, strlen(STR_ERROR)))
+    {
+        is_running = FALSE;
+        CCTL0 &= ~CCIE;
+        TURN_ON_ERR_LED();
+        TURN_OFF_OK_LED();
+        _BIC_SR_IRQ(LPM3_bits);					   // LPM off
+    }
+    else if (IS_MATCH == strncmp (buf, STR_SUCCESS, strlen(STR_SUCCESS)))
+    {
+        is_running = FALSE;
+        CCTL0 &= ~CCIE;
+        TURN_ON_OK_LED();
+        TURN_OFF_ERR_LED();
+        _BIC_SR_IRQ(LPM3_bits);					   // LPM off
+    }
     
     Print_UART(buf);    
     memset(buf, 0, sizeof(buf));
@@ -86,10 +173,16 @@ __interrupt void USCI0RX_ISR(void)
 #pragma vector=PORT1_VECTOR
 __interrupt void PORT1_ISR(void)
 {    
-    P1OUT ^= BIT0;                                 // Toggle LED
-    Print_UART ("make\n");
+    if (FALSE == is_running)
+    {
+        is_running = TRUE;
+        Print_UART ("make\n");
+        _BIC_SR_IRQ(LPM4_bits);                    // LPM off
+        TURN_OFF_OK_LED();
+        ClearWDT();
+    }
         
     __delay_cycles(40000);
-    P1IFG &= ~BIT3;                                // Clear interrupt Flag for next interrupt
+    P1IFG &= ~BIT3;                                // Reset interrupt flag for next time
 }
 
