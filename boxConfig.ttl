@@ -10,8 +10,9 @@ sBoxPrompt = 'you@sBox'
 ack_msg = 'ACK200'
 done_msg = 'DONE200'
 rst_msg = 'RST200'
-sos_msg = "SOS113"
 make_msg = 'make'
+; Define the clue of finish stage here or leave it blank
+finish_stage_msg = ''
 
 auth_file = 'E:\auth.txt'
 com_file = 'E:\com.txt'

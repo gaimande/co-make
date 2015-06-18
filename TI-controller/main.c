@@ -12,8 +12,11 @@
 #define STR_RUNNING           "ACK200"
 #define STR_ERROR             "ERROR"
 #define STR_SUCCESS           "SUCCESS"
+#define STR_FIN_STAGE         "FINISH_STAGE"
 #define STR_MAKE              "make"
 #define IS_MATCH              0
+#define NORMAL_SPEED          6000
+#define FAST_SPEED            NORMAL_SPEED/4
 
 #define TURN_ON_ERR_LED()     P1OUT |= BIT0
 #define TURN_OFF_ERR_LED()    P1OUT &= ~ BIT0
@@ -35,6 +38,7 @@ void ConfigIOs(void);
 void ConfigTimerA2(void);
 
 int is_running = FALSE;
+int blink_speed = NORMAL_SPEED;
 
 void main(void)
 {
@@ -112,15 +116,14 @@ void ConfigIOs(void)
 
 void ConfigTimerA2(void)
 {
-    CCTL0 &= ~CCIE;                                // Disable capture/compare mode
-    CCR0 = 6000;                                   // Select the ACLK (VLO) and sets the operation for up mode
+    CCTL0 &= ~CCIE;                                // Disable capture/compare mode   
     TACTL = TASSEL_1 + MC_1;                       // Change timer to 500ms period with CCR0 = 12000 x (time in second)
 }
 
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A (void)
 {
-    CCR0 = 6000;
+    CCR0 = blink_speed;
     TOGGLE_OK_LED();
     
     ClearWDT();   
@@ -148,7 +151,7 @@ __interrupt void USCI0RX_ISR(void)
         _BIC_SR_IRQ(LPM4_bits);                    // LPM off
         is_running = TRUE;
         CCTL0 |= CCIE;                             // Enable capture/compare mode
-        CCR0 = 6000;
+        CCR0 = blink_speed = NORMAL_SPEED;
         TURN_OFF_ERR_LED();        
     }
     else if (IS_MATCH == strncmp (buf, STR_ERROR, strlen(STR_ERROR)))
@@ -166,6 +169,10 @@ __interrupt void USCI0RX_ISR(void)
         TURN_ON_OK_LED();
         TURN_OFF_ERR_LED();
         _BIC_SR_IRQ(LPM3_bits);					   // LPM off
+    }
+    else if (IS_MATCH == strncmp (buf, STR_FIN_STAGE, strlen(STR_FIN_STAGE)))
+    {
+        CCR0 = blink_speed = FAST_SPEED;
     }
     
     Print_UART(buf);    
