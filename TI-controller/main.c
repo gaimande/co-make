@@ -144,10 +144,12 @@ __interrupt void USCI0RX_ISR(void)
     
     if (IS_MATCH == strncmp (buf, STR_RUNNING, strlen(STR_RUNNING)))
     {
+        /* Support make command by user input */
+        _BIC_SR_IRQ(LPM4_bits);                    // LPM off
         is_running = TRUE;
         CCTL0 |= CCIE;                             // Enable capture/compare mode
         CCR0 = 6000;
-        TURN_OFF_ERR_LED();
+        TURN_OFF_ERR_LED();        
     }
     else if (IS_MATCH == strncmp (buf, STR_ERROR, strlen(STR_ERROR)))
     {
@@ -182,7 +184,7 @@ __interrupt void PORT1_ISR(void)
         ClearWDT();
     }
         
-    __delay_cycles(40000);
+    //__delay_cycles(10000);
     P1IFG &= ~BIT3;                                // Reset interrupt flag for next time
 }
 
