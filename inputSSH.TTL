@@ -37,7 +37,7 @@ strcompare _passwd ""
 if result=0 goto get_password
 
 ; Building connection string
-sprintf2 _constr_ssh '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10' _hostaddr _user _passwd
+sprintf2 _constr_ssh '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10 /F="%s"' _hostaddr _user _passwd window_config
 
 ; Opening SSH connection
 statusbox  '\n   Trying to connect through SSH. Please wait...   \n ' 'Notice' 1

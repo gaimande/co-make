@@ -14,9 +14,11 @@ make_msg = 'make'
 ; Define the clue of finish stage here or leave it blank
 finish_stage_msg = ''
 
-auth_file = 'E:\auth.txt'
-com_file = 'E:\com.txt'
+getdir curDir
 
-macro_dev_server = 'E:\sBox\sBox\dev65.TTL'
-macro_tty_box = 'E:\sBox\sBox\TTY_BOX.TTL'
-window_config = 'E:\sBox\sBox\WINDOW.ini'
+sprintf2 auth_file '%s/%s' curDir 'auth.txt'
+sprintf2 com_file '%s/%s' curDir 'com.txt'
+
+sprintf2 macro_dev_server '%s/%s' curDir 'dev65.TTL'
+sprintf2 macro_tty_box '%s/%s' curDir 'TTY_BOX.TTL'
+sprintf2 window_config '%s/%s' curDir 'WINDOW.INI'
