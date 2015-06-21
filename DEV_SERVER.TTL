@@ -1,23 +1,29 @@
 ; *****************************************************
-; *   Auto halt the making process when any error occur
+; *   SSH connection controller at development server
 ; *   Version 1.0
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
 ; *****************************************************
 include 'boxConfig.ttl'
 
-; Hide MACRO dialog box
+; Hide MACRO dialogue box
 ;show -1
 
 :login
-filesearch auth_file
-if result=1 then
-    fileopen fhandle auth_file 0
-    filereadln fhandle _constr
-    fileclose fhandle
-else
-    goto _end
+call get_authen_info
+if ret=0 then
+    yesnobox 'Cannot get authentication information. Input again?' 'Dev Caution'
+    if result then
+        include 'inputSSH.TTL'
+        if ret=0 goto end
+        goto login
+    else
+        end
+    endif
 endif
+
+; Building connection string
+sprintf2 _constr '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10 /F="%s"' _hostaddr _user _passwd window_config
 
 :connect
 ; Openning SSH conection
@@ -63,7 +69,7 @@ endif
 ; Finish make process. Need to check whether success or not
 if result=1 then
     call check_result
-    if ret=0 then
+    if ret=1 then
         call display_success
     else
         call display_error
@@ -85,6 +91,15 @@ sendmulticast 'TTY_BOX' done_msg 13 10
 ; Loop for the new make process
 goto main_loop
 
+:_end
+; Make sure the connection is on before disconnect
+testlink
+if result= 2 then
+    disconnect
+    closett
+endif
+end
+
 ; *****************************************************
 ; *
 ; *   Function        : set_prompt
@@ -101,13 +116,12 @@ sendln prompt 13 10
 return
 
 
-
 ; *****************************************************
 ; *
 ; *   Function        : check_result
 ; *   Description     : Check the make result after making
 ; *   Input           : None
-; *   Output          : ret (-1: error, 0: OK)
+; *   Output          : ret (0: error, 1: OK)
 ; *
 ; *****************************************************
 :check_result
@@ -119,13 +133,12 @@ waitn 10
 
 strmatch inputstr '0'
 if result=0 then
-    ret = -1
-else
     ret = 0
+else
+    ret = 1
 endif
 
 return
-
 
 
 ; *****************************************************
@@ -146,7 +159,6 @@ sendmulticast 'TTY_BOX' 'ERROR' 13 10
 return
 
 
-
 ; *****************************************************
 ; *
 ; *   Function        : display_success
@@ -165,12 +177,30 @@ sendmulticast 'TTY_BOX' 'SUCCESS' 13 10
 return
 
 
-
-:_end
-; Make sure the connection is on before disconnect
-testlink
-if result= 2 then
-    disconnect
-    closett
+; *****************************************************
+; *
+; *   Function        : get_authen_info
+; *   Description     : The the authentication information
+; *   Input           : None
+; *   Output          : ret (0: Not Found, 1: Found)
+; *                     _user (string contains the username)
+; *                     _passwd (string contains the password)
+; *
+; *****************************************************
+:get_authen_info
+ret = 0
+filesearch conf_file
+if result=1 then
+    fileopen fhandle conf_file 0 1
+    filestrseek fhandle '[Password]'#13#10
+    if result=1 then
+        filereadln fhandle _buffer
+        strsplit _buffer '='
+        _user = groupmatchstr1
+        getpassword conf_file _user _passwd
+        if result=1 ret=1
+    endif
+    fileclose fhandle
 endif
-end
+
+return

@@ -1,5 +1,5 @@
 ; *****************************************************
-; *   Auto halt the making process when any error occur
+; *   COM connection controller
 ; *   Version 1.0
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
@@ -9,37 +9,36 @@ include 'boxConfig.ttl'
 ; Hide MACRO dialogue box
 ;show -1
 
-; Open Serial connection using COM port.
-; Valid value for port number is 1..6.
-filesearch com_file
-if result=1 then
-    fileopen fhandle com_file 0
-    filereadln fhandle _constr
-    fileclose fhandle
-else
-    goto _end
-endif
+; Hide Tera Term.
+;showtt -1
 
 :connect
+call get_com_info
+if ret=0 then
+    yesnobox 'Cannot get COM connection information. Input again?' 'TTY Caution'
+    if result then
+        include 'inputCOM.TTL'
+        if ret=0 goto end
+        goto connect
+    else
+        end
+    endif
+endif
+
+; Open Serial connection using COM port.
+
+; Building connection string
+sprintf2 _constr '/C=%s /BAUD=%s' _port _baud
+messagebox _constr 'info'
+
 ; Open serial connection
 connect _constr
 if result != 2 then
     yesnobox 'Connection fail. Try again?' 'TTY Caution'
     if result then
-        goto login
+        goto connect
     else
         goto _end
-    endif
-endif
-
-; Asking for save information
-ifdefined _comport
-if result then
-    yesnobox 'Do you want to save?' 'Connection successful'
-    if result then
-       fileopen fhandle com_file 0
-       filewrite fhandle _constr
-       fileclose fhandle
     endif
 endif
 
@@ -69,3 +68,33 @@ if result= 2 then
     closett
 endif
 end
+
+; *****************************************************
+; *
+; *   Function        : get_com_info
+; *   Description     : The the COM connection information
+; *   Input           : None
+; *   Output          : ret (0: Not Found, 1: Found)
+; *                     _port (string contains the COM port)
+; *                     _baud (string contains the COM baud rate)
+; *
+; *****************************************************
+:get_com_info
+ret = 0
+filesearch conf_file
+if result=1 then
+    fileopen fhandle conf_file 0 1
+    filestrseek fhandle '[COM]'#13#10
+    if result=1 then
+        filereadln fhandle _buffer
+        strsplit _buffer '='
+        _port = groupmatchstr2
+        filereadln fhandle _buffer
+        strsplit _buffer '='
+        _baud = groupmatchstr2
+        ret = 1
+    endif
+    fileclose fhandle
+endif
+
+return

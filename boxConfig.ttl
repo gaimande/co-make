@@ -1,24 +1,32 @@
 ; *****************************************************
-; *   Auto halt the making process when any error occur
+; *   sBox setup configuration file
 ; *   Version 1.0
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
 ; *****************************************************
 
-sBoxPrompt = 'you@sBox'
-
-ack_msg = 'ACK200'
-done_msg = 'DONE200'
-rst_msg = 'RST200'
-make_msg = 'make'
+;
+; User modification should do here
+;
+; Change the Linux prompt text of the Dev machine
+sBoxPrompt       = 'you@sBox'
 ; Define the clue of finish stage here or leave it blank
 finish_stage_msg = ''
 
+;
+; In most case, do not change below values
+;
+ack_msg          = 'ACK200'
+done_msg         = 'DONE200'
+rst_msg          = 'RST200'
+make_msg         = 'make'
+
 getdir curDir
-
-sprintf2 auth_file '%s/%s' curDir 'auth.txt'
-sprintf2 com_file '%s/%s' curDir 'com.txt'
-
-sprintf2 macro_dev_server '%s/%s' curDir 'dev65.TTL'
+sprintf2 macro_dev_server '%s/%s' curDir 'DEV_SERVER.TTL'
 sprintf2 macro_tty_box '%s/%s' curDir 'TTY_BOX.TTL'
 sprintf2 window_config '%s/%s' curDir 'WINDOW.INI'
+
+getspecialfolder dir "MyDocuments"
+sprintf2 sboxDir '%s/%s' dir 'sBox'
+foldercreate sboxDir
+sprintf2 conf_file '%s/%s' sboxDir 'config.dat'

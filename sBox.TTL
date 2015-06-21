@@ -1,5 +1,5 @@
 ; *****************************************************
-; *   Auto halt the making process when any error occur
+; *   sBox project
 ; *   Version 1.0
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
@@ -15,8 +15,7 @@ if ret = 1 then
     if result then
         goto let_start
     else
-        filedelete auth_file
-        filedelete com_file
+        filedelete conf_file
     endif
 endif
 
@@ -43,43 +42,18 @@ end
 
 ; *****************************************************
 ; *
-; *   Function      : CountDown
-; *   Description   : Display countdown message
-; *   Input         : cnt - time to count in second
-; *                   cnt_title - title of countdown box
-; *                   cnt_msg - message display
-; *   Output        : result (0-No key pressed ; 1-Key pressed)
-; *
-; *****************************************************
-:CountDown
-    while cnt>=0
-        sprintf2 cnt_str '\n%s %d seconds\n ' cnt_msg cnt
-        statusbox cnt_str cnt_title 1
-		
-        cnt = cnt - 1
-		
-        pause 1 
-    endwhile
-return
-
-
-
-; *****************************************************
-; *
 ; *   Function      : CheckSavedConf
 ; *   Description   : Check the existence of saved configuration
 ; *   Input         : None
-; *   Output        : ret (0-Not Found ; 1-Found)
+; *   Output        : ret (0: Not Found ; 1: Found)
 ; *
 ; *****************************************************
 :CheckSavedConf
-ret = 0
-filesearch auth_file
+filesearch conf_file
 if result=1 then
-    filesearch com_file
-    if result=1 then
-	    ret = 1
-    endif
+	ret = 1
+else
+    ret = 0
 endif
 
 return

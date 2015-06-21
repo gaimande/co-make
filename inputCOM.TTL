@@ -1,5 +1,5 @@
 ; *****************************************************
-; *   Auto halt the making process when any error occur
+; *   Inputting COM connection information
 ; *   Version 1.0
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
@@ -24,8 +24,20 @@ if result=0 goto login_tty
 str2int val _comport
 if result=0 goto login_tty
 
+; Calling Popup window to get baudrate
+:_get_baudrate
+inputbox 'Enter COM baud rate' 'Connect to serial port'
+_baudrate=inputstr
+; Check NULL
+strcompare _baudrate ""
+if result=0 goto _get_baudrate
+
+; Check numeric
+str2int val _baudrate
+if result=0 goto _get_baudrate
+
 ; Building connection string
-sprintf2 _constr_tty '/C=%s /BAUD=9600' _comport
+sprintf2 _constr_tty '/C=%s /BAUD=%s' _comport _baudrate
 
 ; Openning serial conection
 connect _constr_tty
@@ -39,8 +51,24 @@ if result != 2 then
     endif
 endif
 
-fileopen fhandle com_file 0
-filewrite fhandle _constr_tty
+; Save COM connection information
+fileopen fhandle conf_file 0 1
+filestrseek fhandle '[COM]'#13#10
+fileclose fhandle
+
+if result=0 then
+    fileopen fhandle conf_file 1
+    filewriteln fhandle ''
+    filewriteln fhandle '[COM]'
+else
+    fileopen fhandle conf_file 0
+    filestrseek fhandle '[COM]'#13#10
+endif
+
+sprintf2 _buff 'port=%s' _comport
+filewriteln fhandle _buff
+sprintf2 _buff 'baud=%s' _baudrate
+filewriteln fhandle _buff
 fileclose fhandle
 
 ret = 1

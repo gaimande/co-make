@@ -1,5 +1,5 @@
 ; *****************************************************
-; *   Auto halt the making process when any error occur
+; *   Inputting SSH connection information
 ; *   Version 1.0
 ; *   Author: quyenlv@dasannetworks.com
 ; *   Date: September 20th 2014
@@ -37,7 +37,7 @@ strcompare _passwd ""
 if result=0 goto get_password
 
 ; Building connection string
-sprintf2 _constr_ssh '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10 /F="%s"' _hostaddr _user _passwd window_config
+sprintf2 _constr_ssh '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=5 /F="%s"' _hostaddr _user _passwd window_config
 
 ; Opening SSH connection
 statusbox  '\n   Trying to connect through SSH. Please wait...   \n ' 'Notice' 1
@@ -52,11 +52,11 @@ if result != 2 then
     endif
 endif
 
-; The timeout limit is 10 sec.
-timeout = 10
+; The timeout limit is 5 sec.
+timeout = 5
 
 ; Be sure that SSH connection is OK before stating test COM connection
-; If after 10 second we do not receive any disconnect or unlink event, 
+; If after 5 second we do not receive any disconnect or unlink event, 
 ; it means that the connection is OK.
 waitevent 1 or 2 or 4
 
@@ -72,9 +72,7 @@ endif
 timeout = 0
 
 ; Save SSH authentication information
-fileopen fhandle auth_file 0
-filewrite fhandle _constr_ssh
-fileclose fhandle
+setpassword conf_file _user _passwd
 
 ret = 1
 
