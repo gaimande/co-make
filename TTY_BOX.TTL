@@ -6,11 +6,8 @@
 ; *****************************************************
 include 'boxConfig.ttl'
 
-; Hide MACRO dialogue box
-;show -1
-
-; Hide Tera Term.
-;showtt -1
+; Minimize MACRO.
+show 0
 
 :connect
 call get_com_info
@@ -25,11 +22,8 @@ if ret=0 then
     endif
 endif
 
-; Open Serial connection using COM port.
-
 ; Building connection string
 sprintf2 _constr '/C=%s /BAUD=%s' _port _baud
-messagebox _constr 'info'
 
 ; Open serial connection
 connect _constr
@@ -42,6 +36,9 @@ if result != 2 then
     endif
 endif
 
+; Hide Tera Term.
+showtt 0
+
 ; Entering synchronous communication mode (useful in most cases)
 setsync 1
 
@@ -51,7 +48,7 @@ setmulticastname 'TTY_BOX'
 
 ; Start here
 :main_loop
-wait make_msg
+waitln make_msg
 sendmulticast 'Dev65' make_msg 13 10
 
 ; Minimum delay time between each build
@@ -61,12 +58,7 @@ pause 5
 goto main_loop
 
 :_end
-; Make sure the connection is on before disconnect
-testlink
-if result= 2 then
-    disconnect
-    closett
-endif
+unlink
 end
 
 ; *****************************************************

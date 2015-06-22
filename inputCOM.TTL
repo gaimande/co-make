@@ -7,7 +7,7 @@
 include 'boxConfig.ttl'
 
 ; Hide MACRO dialogue box
-;show -1
+show -1
 
 ; Return value with 0-Configure Fail and 1-Configure OK
 ret = 0

@@ -7,7 +7,7 @@
 include 'boxConfig.ttl'
 
 ; Hide MACRO dialog box
-;show -1
+show -1
 
 call CheckSavedConf
 if ret = 1 then
@@ -29,12 +29,12 @@ if ret=0 goto _end
 
 getttdir dir_tearterm
 
-; Start ttyBox.ttl script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_tty_box
+; Start DEV_SERVER.TTL script
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_dev_server
 exec cmd_str
 
-; Start dev65.ttl script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_dev_server
+; Start TTY_BOX.TTL script
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_tty_box
 exec cmd_str
 
 :_end

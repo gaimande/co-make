@@ -22,11 +22,11 @@ rst_msg          = 'RST200'
 make_msg         = 'make'
 
 getdir curDir
-sprintf2 macro_dev_server '%s/%s' curDir 'DEV_SERVER.TTL'
-sprintf2 macro_tty_box '%s/%s' curDir 'TTY_BOX.TTL'
-sprintf2 window_config '%s/%s' curDir 'WINDOW.INI'
+sprintf2 macro_dev_server '%s\%s' curDir 'DEV_SERVER.TTL'
+sprintf2 macro_tty_box '%s\%s' curDir 'TTY_BOX.TTL'
+sprintf2 window_config '%s\%s' curDir 'WINDOW.INI'
 
 getspecialfolder dir "MyDocuments"
-sprintf2 sboxDir '%s/%s' dir 'sBox'
+sprintf2 sboxDir '%s\%s' dir 'sBox'
 foldercreate sboxDir
-sprintf2 conf_file '%s/%s' sboxDir 'config.dat'
+sprintf2 conf_file '%s\%s' sboxDir 'config.dat'

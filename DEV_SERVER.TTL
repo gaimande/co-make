@@ -6,8 +6,8 @@
 ; *****************************************************
 include 'boxConfig.ttl'
 
-; Hide MACRO dialogue box
-;show -1
+; Minimize MACRO.
+show 0
 
 :login
 call get_authen_info
@@ -23,7 +23,7 @@ if ret=0 then
 endif
 
 ; Building connection string
-sprintf2 _constr '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10 /F="%s"' _hostaddr _user _passwd window_config
+sprintf2 _constr '%s /ssh /2 /auth=password /user=%s /passwd=%s /timeout=10 /F="%s"' _host _user _passwd window_config
 
 :connect
 ; Openning SSH conection
@@ -37,6 +37,9 @@ if result != 2 then
     endif
 endif
 
+; Restore Tera Term.
+showtt 1
+
 ; Entering synchronous communication mode (useful in most cases)
 setsync 1
 
@@ -48,12 +51,11 @@ setmulticastname 'Dev65'
 pause 5
 call set_prompt
 
-strconcat make_msg #13#10
-
 :main_loop
 ; Wait for user enter make command
 waitln make_msg
-mpause 500
+sendmulticast 'TTY_BOX' ack_msg 13 10
+mpause 100
 sendmulticast 'TTY_BOX' ack_msg 13 10
 
 :waiting
@@ -82,6 +84,8 @@ elseif result=3 then
 	call display_error
 elseif result=4 then
     sendmulticast 'TTY_BOX' 'FINISH_STAGE' 13 10
+    mpause 100
+    sendmulticast 'TTY_BOX' 'FINISH_STAGE' 13 10
     goto waiting
 endif
 
@@ -92,12 +96,7 @@ sendmulticast 'TTY_BOX' done_msg 13 10
 goto main_loop
 
 :_end
-; Make sure the connection is on before disconnect
-testlink
-if result= 2 then
-    disconnect
-    closett
-endif
+unlink
 end
 
 ; *****************************************************
@@ -155,6 +154,8 @@ exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 4e&echo.&e
 
 ; Send status to TTY Controller
 sendmulticast 'TTY_BOX' 'ERROR' 13 10
+mpause 100
+sendmulticast 'TTY_BOX' 'ERROR' 13 10
 
 return
 
@@ -173,6 +174,8 @@ exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 2e&echo.&e
 
 ; Send status to TTY Controller
 sendmulticast 'TTY_BOX' 'SUCCESS' 13 10
+mpause 100
+sendmulticast 'TTY_BOX' 'SUCCESS' 13 10
 
 return
 
@@ -183,6 +186,7 @@ return
 ; *   Description     : The the authentication information
 ; *   Input           : None
 ; *   Output          : ret (0: Not Found, 1: Found)
+; *                     _host (string contains the host's IP address
 ; *                     _user (string contains the username)
 ; *                     _passwd (string contains the password)
 ; *
@@ -198,7 +202,12 @@ if result=1 then
         strsplit _buffer '='
         _user = groupmatchstr1
         getpassword conf_file _user _passwd
-        if result=1 ret=1
+        if result=1 then
+            filereadln fhandle _buffer
+            strsplit _buffer '='
+            _host = groupmatchstr2
+            ret = 1
+        endif
     endif
     fileclose fhandle
 endif

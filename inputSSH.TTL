@@ -7,7 +7,7 @@
 include 'boxConfig.ttl'
 
 ; Hide MACRO dialog box
-;show -1
+show -1
 
 ; Return value with 0-Configure Fail and 1-Configure OK
 ret = 0
@@ -73,6 +73,13 @@ timeout = 0
 
 ; Save SSH authentication information
 setpassword conf_file _user _passwd
+fileopen fhandle conf_file 0
+filestrseek fhandle '[Password]'#13#10
+; Skip the user and password line
+filereadln fhandle _buff
+sprintf2 _buff 'host=%s' _hostaddr
+filewriteln fhandle _buff
+fileclose fhandle
 
 ret = 1
 
