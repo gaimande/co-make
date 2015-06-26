@@ -1,10 +1,10 @@
 ; *****************************************************
 ; *   SSH connection controller at development server
 ; *   Version 1.0
-; *   Author: quyenlv@dasannetworks.com
+; *   Email: gaimande@gmail.com
 ; *   Date: September 20th 2014
 ; *****************************************************
-include 'boxConfig.ttl'
+include 'config.ttl'
 
 ; Minimize MACRO.
 show 0
@@ -14,7 +14,7 @@ call get_authen_info
 if ret=0 then
     yesnobox 'Cannot get authentication information. Input again?' 'Dev Caution'
     if result then
-        include 'inputSSH.TTL'
+        include 'inputssh.ttl'
         if ret=0 goto end
         goto login
     else
@@ -53,23 +53,27 @@ call set_prompt
 
 :main_loop
 ; Wait for user enter make command
-waitln make_msg
-sendmulticast 'TTY_BOX' ack_msg 13 10
+call wait_make_cmd
+sendmulticast 'COM_BOX' ack_msg 13 10
 mpause 100
-sendmulticast 'TTY_BOX' ack_msg 13 10
+sendmulticast 'COM_BOX' ack_msg 13 10
 
 :waiting
 ; Wail till finish or any errors occur
 ; Support make a clue when nearly done by speed up LED blinking
+timeout = 60
 strlen finish_stage_msg
 if result > 0 then
-    wait sBoxPrompt 'Error 1' #3 finish_stage_msg
+    waitln prompt 'Error 1' #3 finish_stage_msg
 else
-    wait sBoxPrompt 'Error 1' #3
+    waitln prompt 'Error 1' #3
 endif    
 
 ; Finish make process. Need to check whether success or not
-if result=1 then
+if result=0 then
+    flushrecv
+    goto waiting
+elseif result=1 then
     call check_result
     if ret=1 then
         call display_success
@@ -77,20 +81,21 @@ if result=1 then
         call display_error
     endif
 elseif result=2 then
-    call display_error
-elseif result=3 then
     ; Send CTRL+C to halt the making process
 	sendln #3
+    call display_error
+elseif result=3 then
 	call display_error
 elseif result=4 then
-    sendmulticast 'TTY_BOX' 'FINISH_STAGE' 13 10
+    sendmulticast 'COM_BOX' 'FINISH_STAGE' 13 10
     mpause 100
-    sendmulticast 'TTY_BOX' 'FINISH_STAGE' 13 10
+    sendmulticast 'COM_BOX' 'FINISH_STAGE' 13 10
     goto waiting
 endif
 
 mpause 200
-sendmulticast 'TTY_BOX' done_msg 13 10
+sendmulticast 'COM_BOX' done_msg 13 10
+timeout = 0
 
 ; Loop for the new make process
 goto main_loop
@@ -108,9 +113,12 @@ end
 ; *
 ; *****************************************************
 :set_prompt
-
-sprintf2 prompt "PS1='\[\e[1;32m\]%s ~$ '" sBoxPrompt
-sendln prompt 13 10
+strlen prompt
+if result=0 then
+    prompt = 'you@co-make'
+    sprintf2 dftPrompt "PS1='\[\e[1;32m\]%s ~$ '" prompt
+    sendln dftPrompt 13 10
+endif
 
 return
 
@@ -153,9 +161,9 @@ return
 exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 4e&echo.&echo. Build Failed.&echo. Please check the output log!&echo.&echo. Press any keys to exit!&pause>NUL"'
 
 ; Send status to TTY Controller
-sendmulticast 'TTY_BOX' 'ERROR' 13 10
+sendmulticast 'COM_BOX' 'ERROR' 13 10
 mpause 100
-sendmulticast 'TTY_BOX' 'ERROR' 13 10
+sendmulticast 'COM_BOX' 'ERROR' 13 10
 
 return
 
@@ -173,9 +181,9 @@ return
 exec 'cmd /c start %comspec% /c "mode 40,10&title Making Status&color 2e&echo.&echo. Build Successfully.&echo.&echo. Press any keys to exit!&pause>NUL"'
 
 ; Send status to TTY Controller
-sendmulticast 'TTY_BOX' 'SUCCESS' 13 10
+sendmulticast 'COM_BOX' 'SUCCESS' 13 10
 mpause 100
-sendmulticast 'TTY_BOX' 'SUCCESS' 13 10
+sendmulticast 'COM_BOX' 'SUCCESS' 13 10
 
 return
 
@@ -211,5 +219,26 @@ if result=1 then
     endif
     fileclose fhandle
 endif
+
+return
+
+
+; *****************************************************
+; *
+; *   Function        : wait_make_cmd
+; *   Description     : Wait till we receive the 'make' command
+; *   Input           : None
+; *   Output          : None
+; *
+; *****************************************************
+:wait_make_cmd
+; Update user's modification at running time
+include 'config.ttl'
+
+until result=1
+    flushrecv
+    recvln
+    strmatch inputstr make_msg
+enduntil
 
 return

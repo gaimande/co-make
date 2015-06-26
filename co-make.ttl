@@ -1,10 +1,10 @@
 ; *****************************************************
-; *   sBox project
+; *   co-make project
 ; *   Version 1.0
-; *   Author: quyenlv@dasannetworks.com
+; *   Email: gaimande@gmail.com
 ; *   Date: September 20th 2014
 ; *****************************************************
-include 'boxConfig.ttl'
+include 'config.ttl'
 
 ; Hide MACRO dialog box
 show -1
@@ -19,10 +19,10 @@ if ret = 1 then
     endif
 endif
 
-include 'inputSSH.TTL'
+include 'inputssh.ttl'
 if ret=0 goto _end
 
-include 'inputCOM.TTL'
+include 'inputcom.ttl'
 if ret=0 goto _end
 
 :let_start
@@ -30,11 +30,11 @@ if ret=0 goto _end
 getttdir dir_tearterm
 
 ; Start DEV_SERVER.TTL script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_dev_server
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M="%s"' dir_tearterm macro_dev_server
 exec cmd_str
 
-; Start TTY_BOX.TTL script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M=%s' dir_tearterm macro_tty_box
+; Start COM_BOX.TTL script
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M="%s"' dir_tearterm macro_com_box
 exec cmd_str
 
 :_end

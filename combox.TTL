@@ -1,10 +1,10 @@
 ; *****************************************************
 ; *   COM connection controller
 ; *   Version 1.0
-; *   Author: quyenlv@dasannetworks.com
+; *   Email: gaimande@gmail.com
 ; *   Date: September 20th 2014
 ; *****************************************************
-include 'boxConfig.ttl'
+include 'config.ttl'
 
 ; Minimize MACRO.
 show 0
@@ -14,7 +14,7 @@ call get_com_info
 if ret=0 then
     yesnobox 'Cannot get COM connection information. Input again?' 'TTY Caution'
     if result then
-        include 'inputCOM.TTL'
+        include 'inputcom.ttl'
         if ret=0 goto end
         goto connect
     else
@@ -43,8 +43,8 @@ showtt 0
 setsync 1
 
 ; Assigning new title to TeraTerm window
-settitle 'TTY_BOX'
-setmulticastname 'TTY_BOX'
+settitle 'COM_BOX'
+setmulticastname 'COM_BOX'
 
 ; Start here
 :main_loop

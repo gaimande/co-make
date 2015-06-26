@@ -1,10 +1,10 @@
 ; *****************************************************
 ; *   Inputting COM connection information
 ; *   Version 1.0
-; *   Author: quyenlv@dasannetworks.com
+; *   Email: gaimande@gmail.com
 ; *   Date: September 20th 2014
 ; *****************************************************
-include 'boxConfig.ttl'
+include 'config.ttl'
 
 ; Hide MACRO dialogue box
 show -1
