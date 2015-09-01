@@ -6,8 +6,8 @@
 ; *****************************************************
 include 'config.ttl'
 
-; Minimize MACRO.
-show 0
+; Hide MACRO.
+show -1
 
 :login
 call get_authen_info

@@ -30,11 +30,11 @@ if ret=0 goto _end
 getttdir dir_tearterm
 
 ; Start DEV_SERVER.TTL script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M="%s"' dir_tearterm macro_dev_server
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M="%s" /F="%s"' dir_tearterm macro_dev_server window_config
 exec cmd_str
 
 ; Start COM_BOX.TTL script
-sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M="%s"' dir_tearterm macro_com_box
+sprintf2 cmd_str 'cmd /c start "" "%s\TTERMPRO" /M="%s" /F="%s"' dir_tearterm macro_com_box window_config
 exec cmd_str
 
 :_end
