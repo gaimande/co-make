@@ -37,19 +37,27 @@ if result != 2 then
     endif
 endif
 
+; Wait for connection is establised successfully
+call wait_connect
+
+; Set the shell prompt as an clue to detect
+mpause 100
+call set_prompt
+
 ; Restore Tera Term.
 showtt 1
 
 ; Entering synchronous communication mode (useful in most cases)
 setsync 1
 
-; Assigning new title to TeraTerm window
-settitle 'Dev65'
-setmulticastname 'Dev65'
+; Clear screen and ready to use
+mpause 100
+clearscreen 0
+send #13
 
-; Set the shell prompt as an clue to detect
-pause 5
-call set_prompt
+; Assigning new title to TeraTerm window
+settitle 'DEV_MACHINE'
+setmulticastname 'DEV_MACHINE'
 
 :main_loop
 ; Wait for user enter make command
@@ -240,5 +248,24 @@ until result=1
     recvln
     strmatch inputstr make_msg
 enduntil
+
+return
+
+
+; *****************************************************
+; *
+; *   Function        : wait_connect
+; *   Description     : Wait till connection is establised
+; *   Input           : None
+; *   Output          : None
+; *
+; *****************************************************
+:wait_connect
+until result=1    
+	sendln 'echo Welcome to co-make!'
+	timeout = 1
+    waitln 'Welcome to co-make!'
+enduntil
+timeout = 0
 
 return

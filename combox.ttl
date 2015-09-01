@@ -49,7 +49,7 @@ setmulticastname 'COM_BOX'
 ; Start here
 :main_loop
 waitln make_msg
-sendmulticast 'Dev65' make_msg 13 10
+sendmulticast 'DEV_MACHINE' make_msg 13 10
 
 ; Minimum delay time between each build
 pause 5
