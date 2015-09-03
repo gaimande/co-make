@@ -56,15 +56,15 @@ clearscreen 0
 send #13
 
 ; Assigning new title to TeraTerm window
-settitle 'DEV_MACHINE'
-setmulticastname 'DEV_MACHINE'
+settitle dev_title
+setmulticastname dev_title
 
 :main_loop
 ; Wait for user enter make command
 call wait_make_cmd
-sendmulticast 'COM_BOX' ack_msg 13 10
+sendmulticast com_title ack_msg 13 10
 mpause 100
-sendmulticast 'COM_BOX' ack_msg 13 10
+sendmulticast com_title ack_msg 13 10
 
 :waiting
 ; Wail till finish or any errors occur

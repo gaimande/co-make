@@ -19,6 +19,8 @@ finish_stage_msg = ''
 ack_msg          = 'ACK200'
 done_msg         = 'DONE200'
 make_msg         = 'make'
+dev_title        = 'DEV_MACHINE'
+com_title        = 'COM_BOX'
 
 getdir curDir
 sprintf2 macro_dev_server '%s\%s' curDir 'devserver.ttl'
